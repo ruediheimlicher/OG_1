@@ -89,7 +89,7 @@
 #define INNEN			0	//	Byte fuer INNENtemperatur
 #define AUSSEN			1	//	Byte fuer Aussentemperatur
 #define STATUS			3	//	Byte fuer Status
-#define BRENNERPIN		2	//	PIN 2 von PORT B als Eingang fuer Brennerstatus
+#define BRENNERPIN	2	//	PIN 2 von PORT B als Eingang fuer Brennerstatus
 
 uint8_t EEMEM WDT_ErrCount0;	// Akkumulierte WDT Restart Events
 uint8_t EEMEM WDT_ErrCount1;	// WDT Restart Events nach wdt-reset
@@ -112,7 +112,7 @@ uint16_t EEMEM Brennerlaufzeit;	// Akkumulierte Laufzeit
 
 void delay_ms(unsigned int ms);
 
-uint8_t Laborstatus=0x00;
+uint8_t OG1status=0x00;
 
 volatile uint16_t Servotakt=20;					//	Abstand der Impulspakete
 volatile uint16_t Servopause=0x00;				//	Zaehler fuer Pause
@@ -316,7 +316,7 @@ ISR(TIMER2_COMP_vect) // Schaltet Impuls an SERVOPIN0 aus
 
 
 
-void main (void) 
+int main (void)
 {
 	/* 
 	in Start-loop in while
@@ -492,14 +492,14 @@ void main (void)
 			//RingD2(2);
 			//delay_ms(20);
 			
-			Laborstatus=rxbuffer[0];
+			OG1status=rxbuffer[0];
 			lcd_gotoxy(0,1);
 			//cli();
 			lcd_puts("St:\0");
-			lcd_puthex(Laborstatus);
+			lcd_puthex(OG1status);
 			//sei();
 			//delay_ms(1000);
-			if ( Laborstatus  & (1<<UHRPIN))
+			if ( OG1status  & (1<<UHRPIN))
 				{
 					//delay_ms(1000);
 					//Schaltuhr ein
@@ -544,7 +544,8 @@ void main (void)
 				//lcd_puts("A0+\0");
 				//lcd_put_tempbis99(temperaturBuffer>>1);//Doppelte Auflšsung				
 				txbuffer[AUSSEN]=(temperaturBuffer>>2);
-				//	initADC(RUECKLAUF);
+         //txbuffer[AUSSEN]=0x37;
+         //	initADC(RUECKLAUF);
 
 				//txbuffer[RUECKLAUF]=temperaturBuffer>>2;
 
