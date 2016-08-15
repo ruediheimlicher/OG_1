@@ -436,7 +436,7 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
             else
             {
                //lcd_putc('-');
-               //spistatus &= ~(1<<SUCCESS_BIT);					// Datenserie nicht korrekt geladen
+               spistatus &= ~(1<<SUCCESS_BIT);					// Datenserie nicht korrekt geladen
                errCounter++;
             }
             // 24.6.2010
