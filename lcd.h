@@ -33,12 +33,13 @@
 #include <inttypes.h>
 
 /* AVR port and pins connected to '164 and/or LCD */
-#define LCD_PORT                PORTB
+#define LCD_PORT                PORTC
+#define LCD_DDR                DDRC
 
 //	defines fuer Slave:
-#define LCD_RSDS_PIN            5
-#define LCD_ENABLE_PIN          6
-#define LCD_CLOCK_PIN           7
+#define LCD_RSDS_PIN            0
+#define LCD_ENABLE_PIN          1
+#define LCD_CLOCK_PIN           2
 
 //	defines fuer mySlave:
 //#define LCD_RSDS_PIN            3
@@ -46,7 +47,6 @@
 //#define LCD_CLOCK_PIN           5
 
 
-#define LCD_BACKLIGHT_PIN       7
 
 /* number of columns on the display */
 #define LCD_COLS 20
@@ -68,8 +68,9 @@
 #define LCD_CMD_SHIFT_LEFT      0x18    /* shift (left) */
 #define LCD_CMD_SHIFT_RIGHT     0x1C    /* shift (right)*/
 
-#define LCD_LINE_1              0x80 /* bit 7 is always set: 0x80 = 0x00 */ 
-#define LCD_LINE_2              0xC0 /* 2nd line at position 40 */ 
+#define LCD_LINE_1              0x80 /* bit 7 is always set: 0x80 = 0x00 */
+#define LCD_LINE_2              0xC0 /* 2nd line at position 40 */
+
 
 /* function set: (always 8-bit with the shift-register circuit I'm using */
 #define LCD_FUNCTION_8x1        0x30   /* 5x7 characters, single line display */
@@ -80,6 +81,9 @@
 #define LCD_DISP_LENGTH    20     /**< visibles characters per line of the display */
 #define LCD_START_LINE1  0x00     /**< DDRAM address of first char of line 1 */
 #define LCD_START_LINE2  0x40     /**< DDRAM address of first char of line 2 */
+#define LCD_START_LINE3  0x14     /**< DDRAM address of first char of line 3 */
+#define LCD_START_LINE4  0x54     /**< DDRAM address of first char of line 4 */
+
 #define LCD_CGRAM             6      /* DB6: set CG RAM address             */
 #define LCD_DDRAM             7      /* DB7: set DD RAM address             */
 
@@ -87,7 +91,7 @@
 
 /* F_CPU is used by delay routines from util/delay.h. May already be defined */
 #ifndef F_CPU
-#define F_CPU 1000000UL  /* 1 MHz CPU clock */
+#define F_CPU 16000000UL  /* 1 MHz CPU clock */
 #endif
 
 /* functions */

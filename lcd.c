@@ -73,18 +73,6 @@ void lcddelay_ms(unsigned int ms)/* delay for a minimum of <ms> */
 
 
 
-void 
-lcd_backlight(int backlight_on)
-{
-        if (backlight_on)
-        {
-                /* LCD Backlight on */
-                LCD_PORT |= _BV(LCD_BACKLIGHT_PIN);                
-        } else {
-                /*  LCD Backlight off */
-                LCD_PORT &= ~_BV(LCD_BACKLIGHT_PIN);
-        }
-}
 
 /*
  * Initializes the LCD.  Should be called during the initialization of the 
@@ -230,6 +218,20 @@ char string[4];
   }
 lcd_puts(string);
 }
+void lcd_putint12(uint16_t zahl)
+{
+   char string[5];
+   int8_t i;                             // schleifenzŠhler
+   
+   string[4]='\0';                       // String Terminator
+   for(i=3; i>=0; i--)
+   {
+      string[i]=(zahl % 10) +'0';         // Modulo rechnen, dann den ASCII-Code von '0' addieren
+      zahl /= 10;
+   }
+   lcd_puts(string);
+}
+
 
 void lcd_putint16(uint16_t zahl)
 {
@@ -245,6 +247,19 @@ char string[8];
 lcd_puts(string);
 }
 
+void lcd_putint3(uint16_t zahl)     // int bis 1000
+{
+   char string[4];
+   int8_t i;                             // schleifenzŠhler
+   
+   string[3]='\0';                       // String Terminator
+   for(i=2; i>=0; i--)
+   {
+      string[i]=(zahl % 10) +'0';         // Modulo rechnen, dann den ASCII-Code von '0' addieren
+      zahl /= 10;
+   }
+   lcd_puts(string);
+}
 
 
 
@@ -367,20 +382,29 @@ Returns:  none
 *************************************************************************/
 void lcd_gotoxy(uint8_t x, uint8_t y)
 {
-    if ( y==0 ) 
-		{
-		
-        lcd_load_byte((1<<LCD_DDRAM)+LCD_START_LINE1+x);
-		lcd_send_cmd();
-		}
-    else
-	{
-       
-		lcd_load_byte((1<<LCD_DDRAM)+LCD_START_LINE2+x);
-		lcd_send_cmd();
-
-		}
-
+   switch (y)
+   {
+      case 0:
+         lcd_load_byte((1<<LCD_DDRAM)+LCD_START_LINE1+x);
+         lcd_send_cmd();
+         break;
+      case 1:
+         lcd_load_byte((1<<LCD_DDRAM)+LCD_START_LINE2+x);
+         lcd_send_cmd();
+         break;
+      case 2:
+         lcd_load_byte((1<<LCD_DDRAM)+LCD_START_LINE3+x);
+         lcd_send_cmd();
+         break;
+      case 3:
+         lcd_load_byte((1<<LCD_DDRAM)+LCD_START_LINE4+x);
+         lcd_send_cmd();
+         break;
+         
+         
+   }//switch
+   
+   
 }/* lcd_gotoxy */
 
 // Display loeschen
