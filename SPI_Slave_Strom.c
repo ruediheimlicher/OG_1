@@ -110,7 +110,8 @@ static char CurrentDataString[64];
 
 #define SPI_SENDBIT				0
 
-
+#define TCR1A_SET  TCCR1B |= (1<<CS10)
+#define TCR1A_STOP  TCCR1B &= ~(1<<CS10)
 
 void delay_ms(unsigned int ms);
 
@@ -238,8 +239,9 @@ void timer1(void) // Instrument
     TCCR1B |=  (1<<WGM12);
     TCCR1B |=  (1<<WGM13);
    
-   TCCR1B |= (1<<CS10);
+//   TCCR1B |= (1<<CS10);
 //   TCCR1B |= (1<<CS12);
+   TCR1A_SET;
    
    ICR1 = 0xFFFF;
    OCR1A = 0x00;
@@ -248,12 +250,23 @@ void timer1(void) // Instrument
  //  TIMSK1 |= OCIE1A;
 }
 
+/*
 ISR(TIMER1_COMPA_vect)
 {
   // OCR1A = impulsmittelwert;
 }
-
-
+*/
+void timer1_set(int on)
+{
+   if (on)
+   {
+      TCR1A_SET;
+   }
+   else
+   {
+      TCR1A_STOP;
+   }
+}
 
 
 void str_cpy(char *ziel,char *quelle)
@@ -474,6 +487,9 @@ int main (void)
       
       
       //**	Beginn Current-Routinen	***********************
+      // test
+
+      // end test
       
       if (currentstatus & (1<<NEWBIT))
       {
@@ -608,7 +624,7 @@ int main (void)
                outbuffer[0] = ((uint32_t)impulsmittelwert & 0xFF);
                outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF;
                outbuffer[2] = ((uint32_t)impulsmittelwert>>16) & 0xFF;
-           
+               //out_startdaten = 0x13;
 
                
                
@@ -851,8 +867,14 @@ int main (void)
          {
             lcd_gotoxy(15,3);
             lcd_puts("   ");
+            lcd_gotoxy(5,0);
+            lcd_puts("   ");
+
             
             SPI_CONTROL_PORT |= (1<<SPI_CONTROL_MISO); // MISO ist HI in Pausen
+            
+            // timer1 wieder ein
+            timer1_set(1);
             
             wdt_reset();
             SPI_Call_count0++;
@@ -881,6 +903,10 @@ int main (void)
             lcd_putint(outbuffer[1]);
             lcd_putc('*');
             lcd_putint(outbuffer[2]);
+            lcd_putc('*');
+            lcd_putint(out_startdaten);
+            
+            lcd_gotoxy(15,0);
             lcd_putc('c');
             lcd_putint(SPI_Call_count0);
             
@@ -893,7 +919,17 @@ int main (void)
             lcd_putint(inbuffer[2]);
             lcd_putc('s');
             lcd_putint(in_startdaten);
+            
+            if (in_startdaten == 0)
+            {
+               spi_errcount++;
+            }
+            lcd_gotoxy(10,0);
+            lcd_putint(spi_errcount);
 
+            lcd_gotoxy(10,3);
+            lcd_putint(SendErrCounter);
+            
             
             /*
             lcd_puthex(in_startdaten);
@@ -1032,6 +1068,10 @@ int main (void)
             
             // Bits im Zusammenhang mit der Uebertragung zuruecksetzen. Wurden in ISR gesetzt
             
+            lcd_gotoxy(5,0);
+            lcd_putint(spi_bitcontrol);
+            spi_bitcontrol=0;
+
             spistatus &= ~(1<<ACTIVE_BIT);		// Bit 0 loeschen
             spistatus &= ~(1<<STARTDATEN_BIT);	// Bit 1 loeschen
             spistatus &= ~(1<<ENDDATEN_BIT);		// Bit 2 loeschen
@@ -1107,6 +1147,7 @@ int main (void)
             // hier:
             // Daten sind in current gesetzt
             
+            timer1_set(0);
             
             spistatus |=(1<<ACTIVE_BIT); // Bit 0 setzen: neue Datenserie
             spistatus |=(1<<STARTDATEN_BIT); // Bit 1 setzen: erster Wert ergibt StartDaten

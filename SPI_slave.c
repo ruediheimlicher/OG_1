@@ -339,6 +339,7 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
             spistatus &= ~(1<<LB_BIT);						// Bit fuer lb zuruecksetzen
             spistatus |= (1<<HB_BIT);						// Bit fuer hb setzen
             bitpos=0;
+            spi_bitcontrol |= (1<<LB_BIT);
          }
          
       }
@@ -378,9 +379,10 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
          
          if (bitpos>=8)	// Byte fertig
          {
-            spistatus &= ~(1<<HB_BIT);						// Bit fuer hb zuruecksetzen
+            spistatus &= ~(1<<HB_BIT);						// Bit fuer hb zuruecksetzen, anschliessend kommt data-array
             
             bitpos=0;
+            spi_bitcontrol |= (1<<HB_BIT);
          }
          
       }
@@ -391,7 +393,6 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
       
       else if (spistatus & (1<<ENDDATEN_BIT))					// out_enddaten senden, in_enddaten laden
       {
-         
          if (SPI_CONTROL_PORTPIN & (1<<SPI_CONTROL_MOSI))	// bit ist HI
          {
             in_enddaten |= (1<<(7-bitpos));
@@ -425,7 +426,6 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
          
          if (bitpos>=8)	// Byte fertig
          {
-            spistatus &= ~(1<<ENDDATEN_BIT);						// Bit fuer Enddaten zuruecksetzen
             bitpos=0;
             if (out_startdaten + in_enddaten==0xFF)
             {
@@ -439,6 +439,8 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
                spistatus &= ~(1<<SUCCESS_BIT);					// Datenserie nicht korrekt geladen
                errCounter++;
             }
+            spi_bitcontrol |= (1<<ENDDATEN_BIT);
+            
             // 24.6.2010
             //				out_startdaten=0xC0; ergab nicht korrekte Pruefsumme mit in_enddaten
             
@@ -453,6 +455,8 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
       else			// Datenarray in inbuffer laden, Daten von outbuffer senden
          
       {
+         
+         
          if (SPI_CONTROL_PORTPIN & (1<<SPI_CONTROL_MOSI))	// bit ist HI
          {
             
@@ -491,9 +495,14 @@ ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
             }
             else 
             {
-               spistatus |= (1<<ENDDATEN_BIT);					// Bit fuer Enddaten setzen
+               spistatus |= (1<<ENDDATEN_BIT);					// array fertig, Bit fuer Enddaten setzen
+            
+               // Array fertig
+               spi_bitcontrol |= (1<<SPI_DATA_BIT);
             }
             bitpos=0;
+            // control
+            
          }	// if bitpos
       }						//  Datenarray in inbuffer laden, Daten von outbuffer senden
    
