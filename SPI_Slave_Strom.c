@@ -488,8 +488,16 @@ int main (void)
       
       //**	Beginn Current-Routinen	***********************
       
-      if (currentstatus & (1<<NEWBIT)) // SPI fertig, neue Stommessung anfangen
+      if (currentstatus & (1<<NEWBIT)) // SPI fertig, neue Strommessung anfangen
       {
+         
+         // schon eine Serie angefangen?
+         if (!(currentstatus & (1<<COUNTBIT)))
+         {
+            messungcounter=0;
+            currentstatus |= (1<<COUNTBIT); //
+         }
+         
          //     inbuffer[0]=0;
          //     inbuffer[1]=0;
          //     inbuffer[2]=0;
@@ -509,7 +517,7 @@ int main (void)
             
             //currentstatus &= ~(1<<NEWBIT);
             
-            if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
+            if ((currentstatus & (1<<IMPULSBIT)) && (currentstatus & (1<<COUNTBIT))) // neuer Impuls angekommen, Zaehlung lauft noch, noch nicht genuegend werte
             {
                //OSZILO;
                inbuffer[0]=0;
@@ -518,13 +526,13 @@ int main (void)
                in_startdaten=0;
                out_startdaten = 0xB1;
                //OSZILO;
-               currentstatus++; // ein Wert mehr
+               //currentstatus++; // ein Wert mehr
                messungcounter ++;
                //lcd_gotoxy(0,3);
                //lcd_putint(currentstatus & 0x0F);
                impulszeitsumme += (impulszeit/ANZAHLWERTE);      // float, Wert aufsummieren
                
-               if ((currentstatus & 0x0F) == ANZAHLWERTE)      // genuegend Werte
+               if (messungcounter >= ANZAHLWERTE)      // genuegend Werte
                {
                   paketcounter++;
                   
@@ -547,7 +555,7 @@ int main (void)
                   
                   
                   
-                  currentstatus &= 0xF0; // Bit 0-3 reset
+                  messungcounter=0; // Bit 0-3 reset
                   //currentstatus &= ~(1<<IMPULSBIT);
                   currentstatus &= ~(1<<NEWBIT);
 
