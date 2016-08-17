@@ -170,7 +170,7 @@ ISR(TIMER2_COMPA_vect) // CTC Timer2
    if (intervallzeit == INTERVALL) // 100ms Messintervall abgelaufen, Anzahl zum schleppenden Mittelwert anfuegen. 
    {
       intervallzeit = 0;
-      stromimpulsmittelwertarray[stromimpulsindex++] = stromimpulscounter; // messung im Array fuer mittelwertt einfuegen
+      stromimpulsmittelwertarray[stromimpulsindex++] = stromimpulscounter; // messung im Array fuer mittelwert einfuegen
       stromimpulscounter=0;
       stromimpulsindex &= 0x03; // :4 (Ringzaehler bis 4)
       
@@ -190,7 +190,7 @@ ISR(TIMER2_COMPA_vect) // CTC Timer2
 
 ISR(INT1_vect) // Neuer Impuls vom Zaehler ist angekommen. Entspricht 360 mWh
 {
-   
+   //OSZILO;
    stromimpulscounter++; // Anzahl Impulse der laufenden Messung
    
 //   volatile uint8_t messungcounter;
@@ -226,7 +226,7 @@ ISR(INT1_vect) // Neuer Impuls vom Zaehler ist angekommen. Entspricht 360 mWh
       
       //PORTB ^= (1<<IMPULSPIN);
    }
-   
+   //OSZIHI;
 }	// ISR
 
 void InitCurrent(void) // INT1
