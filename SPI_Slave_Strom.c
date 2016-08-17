@@ -499,9 +499,9 @@ int main (void)
        // test ohne current
          if (TEST)
          {
-         inbuffer[0]=0;
-         inbuffer[1]=0;
-         inbuffer[2]=0;
+            inbuffer[0]=0;
+            inbuffer[1]=0;
+            inbuffer[2]=0;
 
          
          outbuffer[0] = testwert;
@@ -512,26 +512,26 @@ int main (void)
          currentstatus &= ~(1<<NEWBIT);
          continue;
          }
-         
+             
       // end test ohne current
-         
-         if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
-         {
-            inbuffer[0]=0;
-            inbuffer[1]=0;
-            inbuffer[2]=0;
-            in_startdaten=0;
-            out_startdaten = 0xB1;
+            
+            if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
+            {
+                  inbuffer[0]=0;
+                  inbuffer[1]=0;
+                  inbuffer[2]=0;
+                  in_startdaten=0;
+                  out_startdaten = 0xB1;
             //OSZILO;
             //   PORTD |=(1<<ECHOPIN);
             currentstatus++; // ein Wert mehr gemessen
             messungcounter ++;
             impulszeitsumme += (impulszeit/ANZAHLWERTE);      // float, Wert aufsummieren
-            
-            
+                  
+                 
             // interger addieren
             integerimpulszeit += impulszeit; // float, float
-            
+                  
             if (filtercount == 0) // neues Paket
             {
                filtermittelwert = impulszeit;
@@ -541,7 +541,7 @@ int main (void)
                if (filtercount < filterfaktor)
                {
                   filtermittelwert = ((filtercount-1)* filtermittelwert + impulszeit)/filtercount;
-                  
+
                   //lcd_gotoxy(19,1);
                   //lcd_putc('a');
                }
@@ -552,9 +552,9 @@ int main (void)
                   //lcd_putc('f');
                }
                
-            }
-            
-            
+         }
+         
+         
 //            char filterstromstring[8];
 //            filtercount++;
             /*
@@ -568,7 +568,7 @@ int main (void)
              
              dtostrf(filtermittelwert,5,1,filterstromstring);
              //lcd_puts(filterstromstring);
-             */
+            */
             
             //         if (filtercount & (filterfaktor == 0)) // Wert anzeigen
             {
