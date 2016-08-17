@@ -34,7 +34,7 @@ extern volatile uint8_t in_enddaten;					// Enddaten vom Master, Anzeige fuer vo
 #define DATA_RECEIVE_BIT		3
 #define TWI_WAIT_BIT          4 // stoppt den TWI waehrend status 0
 //#define SPI_ERR_BIT				5 // deakt, in spistatus verwendet als 6
-#define SPI_TALK_BIT				6 // unused
+#define SPI_DATA_BIT				6 // unused
 #define SPI_DATA_READY_BIT		7
 
 #define TIMER2_WERT				0xFF
@@ -86,7 +86,8 @@ volatile uint8_t								in_hbdaten;
 volatile uint8_t								in_lbdaten;
 
 volatile uint8_t								complement=0;		//Zweiercomplement
-
+volatile uint8_t								spi_bitcontrol;
+volatile uint8_t								spi_errcount;
 
 static volatile uint8_t						bitpos=0xFF;
 static volatile uint8_t						startbitpos=0;

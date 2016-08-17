@@ -461,7 +461,7 @@ int main (void)
    {
       //Blinkanzeige
       loopcount0++;
-      if (loopcount0==0x01FF)
+      if (loopcount0==0x0800)
       {
          loopcount0=0;
          LOOPLEDPORT ^=(1<<LOOPLED);
@@ -496,6 +496,24 @@ int main (void)
     //     inbuffer[0]=0;
     //     inbuffer[1]=0;
     //     inbuffer[2]=0;
+       // test ohne current
+         if (TEST)
+         {
+         inbuffer[0]=0;
+         inbuffer[1]=0;
+         inbuffer[2]=0;
+
+         
+         outbuffer[0] = testwert;
+         outbuffer[1] = testwert;
+         outbuffer[2] = testwert;
+         out_startdaten = 0xB1;
+         testwert++;
+         currentstatus &= ~(1<<NEWBIT);
+         continue;
+         }
+         
+      // end test ohne current
          
          if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
          {
@@ -503,14 +521,16 @@ int main (void)
             inbuffer[1]=0;
             inbuffer[2]=0;
             in_startdaten=0;
+            out_startdaten = 0xB1;
             //OSZILO;
             //   PORTD |=(1<<ECHOPIN);
             currentstatus++; // ein Wert mehr gemessen
             messungcounter ++;
-            impulszeitsumme += (impulszeit/ANZAHLWERTE);      // Wert aufsummieren
+            impulszeitsumme += (impulszeit/ANZAHLWERTE);      // float, Wert aufsummieren
+            
             
             // interger addieren
-            integerimpulszeit += impulszeit;
+            integerimpulszeit += impulszeit; // float, float
             
             if (filtercount == 0) // neues Paket
             {
@@ -524,22 +544,19 @@ int main (void)
                   
                   //lcd_gotoxy(19,1);
                   //lcd_putc('a');
-                  
                }
                else
                {
                   filtermittelwert = ((filterfaktor-1)* filtermittelwert + impulszeit)/filterfaktor;
-                  
-                  
                   //lcd_gotoxy(19,1);
                   //lcd_putc('f');
-                  
                }
                
             }
             
-            char filterstromstring[8];
-            filtercount++;
+            
+//            char filterstromstring[8];
+//            filtercount++;
             /*
              lcd_gotoxy(0,0);
              lcd_putint16(impulszeit/100);
@@ -567,8 +584,10 @@ int main (void)
             {
                OSZILO;
                
-               lcd_gotoxy(19,0);
-               lcd_putc(' ');
+//               lcd_gotoxy(19,0);
+//               lcd_putc(' ');
+
+               
                //lcd_putc(' ');
                //lcd_gotoxy(6,1);
                //lcd_putc(' ');
@@ -581,7 +600,7 @@ int main (void)
                //lcd_gotoxy(0,1);
                //lcd_putint(messungcounter);
                
-               paketcounter++;
+               
                
                //lcd_gotoxy(0,0);
                //lcd_puts("  \0");
@@ -598,25 +617,24 @@ int main (void)
                 lcd_putc(' ');
                 }
                 */
+               paketcounter++;
+
                lcd_gotoxy(0,0);
                lcd_putint(paketcounter);
                cli();
-               
-               
                
                currentstatus &= 0xF0; // Bit 0-3 reset
                
                // Wert fuer SPI-Uebertragung
                
-               impulsmittelwert = impulszeitsumme;
+               impulsmittelwert = impulszeitsumme; // float = float
                
                // timer1 setzen
-               OCR1A = impulsmittelwert;
+               OCR1A = (uint16_t)(impulsmittelwert+0.5); // float to uint16
                
                // summe resetten
                impulszeitsumme = 0;
-               
-               
+         
 //               impulsmittelwertl = ((uint32_t)impulsmittelwert & 0xFF);
  //              impulsmittelwerth = ((uint32_t)impulsmittelwert>>8) & 0xFF;
   //             impulsmittelwerthh = ((uint32_t)impulsmittelwert>>16) & 0xFF;
@@ -625,8 +643,6 @@ int main (void)
                outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF;
                outbuffer[2] = ((uint32_t)impulsmittelwert>>16) & 0xFF;
                //out_startdaten = 0x13;
-
-               
                
                sei();
                //                lcd_gotoxy(0,1);
@@ -640,8 +656,8 @@ int main (void)
                //char impstring[12];
                //dtostrf(impulsmittelwert,8,2,impstring);
                
-               lcd_gotoxy(0,3);
-               lcd_putint16(((uint16_t)impulsmittelwert) );
+   //            lcd_gotoxy(0,3);
+    //           lcd_putint16(((uint16_t)impulsmittelwert) );
                //lcd_putc('*');
                
                
@@ -660,7 +676,9 @@ int main (void)
                
                //     leistung = 0xFFFF/impulsmittelwert;
  //              cli();
-               
+ 
+               // Leistung berechnen
+               /*
                if (impulsmittelwert)
                {
                   leistung = 360.0/impulsmittelwert*100000.0;// 480us
@@ -674,6 +692,7 @@ int main (void)
  //                 lcd_putc('*');
                }
                wattstunden = impulscount/10; // 310us
+               */
                
 //               sei();
                
@@ -839,6 +858,7 @@ int main (void)
          }
         
       }
+      
       //**    End Current-Routinen*************************
       
 #pragma mark SPI
@@ -863,7 +883,7 @@ int main (void)
          
 #pragma mark PASSIVE
          
-         if (spistatus &(1<<ACTIVE_BIT)) // Slave ist erst neu passiv geworden. Aufraeumen, Daten uebernehmen
+         if (spistatus &(1<<ACTIVE_BIT)) // ACTIVE_BIT noch HI. Slave ist erst neu passiv geworden. Aufraeumen, Daten uebernehmen
          {
             lcd_gotoxy(15,3);
             lcd_puts("   ");
@@ -880,7 +900,7 @@ int main (void)
             SPI_Call_count0++;
             // Eingang von Interrupt-Routine, Daten von HomeCentral-Slave
             lcd_gotoxy(19,0);
-            lcd_putc(' ');
+           // lcd_putc(' ');
             
             // in lcd verschoben
             //lcd_clr_line(2);
@@ -927,9 +947,8 @@ int main (void)
             lcd_gotoxy(10,0);
             lcd_putint(spi_errcount);
 
-            lcd_gotoxy(10,3);
+            lcd_gotoxy(16,3);
             lcd_putint(SendErrCounter);
-            
             
             /*
             lcd_puthex(in_startdaten);
@@ -956,7 +975,6 @@ int main (void)
             //lcd_gotoxy(0,0);
             //lcd_puts("      \0");
             
-            
             lcd_gotoxy(19,0);
             lcd_putc(' ');
             lcd_gotoxy(19,0);
@@ -967,8 +985,8 @@ int main (void)
                {
                   lcd_putc('+');
                   spistatus |= (1<<SUCCESS_BIT); // Bit fuer vollstaendige und korrekte  Uebertragung setzen
-                  lcd_gotoxy(19,0);
-                  lcd_putc(' ');
+                  //lcd_gotoxy(19,0);
+                  //lcd_putc(' ');
                   //lcd_clr_line(3);
                   //lcd_gotoxy(0,1);
                   //lcd_puthex(loopCounterSPI++);
@@ -985,17 +1003,18 @@ int main (void)
                {
                   spistatus &= ~(1<<SUCCESS_BIT); // Uebertragung fehlerhaft, Bit loeschen
                   
-                  //lcd_putc('-');
+                  lcd_putc('-');
                   //lcd_clr_line(1);
-                  lcd_gotoxy(15,3);
+                  lcd_gotoxy(0,3);
                   lcd_puts("ER1");
-                  /*
+                  
                   lcd_putc(' ');
-                  lcd_puthex(out_startdaten);
-                  lcd_puthex(in_enddaten);
+                  lcd_putint(out_startdaten);
                   lcd_putc(' ');
-                  lcd_puthex(out_startdaten + in_enddaten);
-                  */
+                  lcd_putint(in_enddaten);
+                  lcd_putc(' ');
+                  lcd_putint(out_startdaten + in_enddaten);
+                  
                   spistatus &= ~(1<<SPI_SHIFT_IN_OK_BIT);
                   {
                      SendErrCounter++;
@@ -1079,6 +1098,8 @@ int main (void)
             spistatus &= ~(1<<LB_BIT);				// Bit 4 loeschen
             spistatus &= ~(1<<HB_BIT);				// Bit 5 loeschen
             
+            
+            
             // aufraeumen
             /*
             out_startdaten=0x00;
@@ -1112,13 +1133,10 @@ int main (void)
             
             // end Strom messen
             
-            
-            
-         } // if Active-Bit  SPI ist neu passiv, Active-bit resetten
+          } // if Active-Bit  SPI ist neu passiv, Active-bit resetten
          
          
 #pragma mark HomeCentral-Tasks
-         
          
       } //  Passiv
       
@@ -1144,9 +1162,14 @@ int main (void)
              inbuffer[j]=0;
              }
              */
+            
             // hier:
             // Daten sind in current gesetzt
             
+            // Ausnahme:
+            in_startdaten=0;
+            in_enddaten=0;
+
             timer1_set(0);
             
             spistatus |=(1<<ACTIVE_BIT); // Bit 0 setzen: neue Datenserie
