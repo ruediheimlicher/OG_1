@@ -495,7 +495,7 @@ int main (void)
          if (!(currentstatus & (1<<COUNTBIT)))
          {
             messungcounter=0;
-            currentstatus |= (1<<COUNTBIT); //
+            currentstatus |= (1<<COUNTBIT); // neue Messung starten
          }
          
          //     inbuffer[0]=0;
@@ -534,6 +534,7 @@ int main (void)
                
                if (messungcounter >= ANZAHLWERTE)      // genuegend Werte
                {
+                  cli(); // Uebertragung nicht stoeren durch INT0
                   paketcounter++;
                   
                   //outbuffer[0] = testwert;
@@ -543,27 +544,29 @@ int main (void)
                   
                   //impulsmittelwert = rand();
                   
+                  // impulsmittelwert uebernehmen
                   impulsmittelwert = impulszeitsumme;
                   
                   // summe resetten
                   impulszeitsumme = 0;
                   
+                  messungcounter=0; //
+
+                  // Daten fuer SPI setzen
                   outbuffer[0] = ((uint32_t)impulsmittelwert & 0xFF);
                   outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF;
                   outbuffer[2] = ((uint32_t)impulsmittelwert>>16) & 0xFF;
-
                   
-                  
-                  
-                  messungcounter=0; // Bit 0-3 reset
-                  //currentstatus &= ~(1<<IMPULSBIT);
+                  // Messung vollstaendig, currentstatus zuruecksetzen
+                  currentstatus &= ~(1<<IMPULSBIT);
+                  currentstatus &= ~(1<<COUNTBIT);
                   currentstatus &= ~(1<<NEWBIT);
-
+                  sei();
                   
                } // if genuegend Werte
                
-               impulszeit=0;
-               currentstatus &= ~(1<<IMPULSBIT);
+      //         impulszeit=0;
+ //              currentstatus &= ~(1<<IMPULSBIT);
                //OSZIHI;
             }// if IMPULSBIT
             
@@ -737,6 +740,16 @@ int main (void)
          
          if (spistatus &(1<<ACTIVE_BIT)) // ACTIVE_BIT noch HI. Slave ist erst neu passiv geworden. Aufraeumen, Daten uebernehmen
          {
+            
+            // wenn noch nicht zurueckgeetzt: Strommessung ausschalten
+            currentstatus &= ~(1<<IMPULSBIT);
+            currentstatus &= ~(1<<COUNTBIT);
+            currentstatus &= ~(1<<NEWBIT);
+            impulszeitsumme = 0;
+            impulszeit = 0;
+            messungcounter=0;
+            // outbuffer belassen
+            
             lcd_gotoxy(15,3);
             lcd_puts("   ");
             lcd_gotoxy(5,0);
@@ -1000,6 +1013,33 @@ int main (void)
          if (!(spistatus & (1<<ACTIVE_BIT))) // CS ist neu aktiv (LO) geworden, Active-Bit 0 ist noch nicht gesetzt
          {
             
+            if (messungcounter && (messungcounter < ANZAHLWERTE)) // aktuelle Messung begonnen, aber noch nicht fertig, aufrŠumen
+            {
+               messungcounter=0;
+               out_startdaten = 0xB1;
+               
+               //impulsmittelwert = rand();
+               
+               // impulsmittelwert uebernehmen
+               impulsmittelwert = impulszeitsumme;
+               
+               // summe resetten
+               impulszeitsumme = 0;
+               
+               messungcounter=0; //
+               
+               // Daten fuer SPI setzen
+               outbuffer[0] = 0x00;
+               outbuffer[1] = 0x00;
+               outbuffer[2] = 0x00;
+               
+               // Messung vollstaendig, currentstatus zuruecksetzen
+               currentstatus &= ~(1<<IMPULSBIT);
+               currentstatus &= ~(1<<COUNTBIT);
+               currentstatus &= ~(1<<NEWBIT);
+
+            }
+
             /*
              // in Master:
              // Aufnahme der Daten vom HomeCentral-Slave vorbereiten
