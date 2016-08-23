@@ -27,6 +27,7 @@
 //									*
 //***********************************
 
+#define TEST 1
 
 #define STARTDELAYBIT	0
 #define HICOUNTBIT		1
@@ -253,9 +254,11 @@ void timer1(void) // Instrument
 /*
 ISR(TIMER1_COMPA_vect)
 {
-  // OCR1A = impulsmittelwert;
+   //OCR1A = 0xFFFF - (uint16_t)(impulsmittelwert+0.5); // float to uint16
+  // OCR1A = 4*webleistung;
 }
 */
+
 void timer1_set(int on)
 {
    if (on)
@@ -412,10 +415,12 @@ int main (void)
 	lcd_puts("Guten Tag\0");
 	delay_ms(1000);
 	lcd_cls();
-	lcd_puts("Strom\0");
+	
 	
 	delay_ms(1000);
+   
    lcd_clr_line(0);
+   lcd_puts("Strom");
 	uint8_t Tastenwert=0;
 	uint8_t TastaturCount=0;
 	uint8_t Servowert=0;
@@ -457,6 +462,7 @@ int main (void)
 	  */
    sei();
    uint8_t i=0;
+   
 	while (1)
    {
       //Blinkanzeige
@@ -547,6 +553,29 @@ int main (void)
                   // impulsmittelwert uebernehmen
                   impulsmittelwert = impulszeitsumme;
                   
+                  // Leistung berechnen
+                  
+                   if (impulsmittelwert)
+                   {
+                      leistung = 360.0/impulsmittelwert*100000.0;// 480us
+                      
+                      // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
+                      webleistung = (uint32_t)360.0/impulsmittelwert*100000.0;
+                      
+                      lcd_gotoxy(0,1);
+                      lcd_putc('L');
+                      lcd_putc(':');
+                      
+                      lcd_putint12(webleistung);
+                      lcd_putc('W');
+                   }
+                   wattstunden = impulscount/10; // 310us
+
+                  
+                  // timer1 setzen
+                  
+                  //OCR1A = (uint16_t)(impulsmittelwert+0.5); // float to uint16
+                  OCR1A = 4*webleistung;
                   // summe resetten
                   impulszeitsumme = 0;
                   
@@ -561,7 +590,32 @@ int main (void)
                   currentstatus &= ~(1<<IMPULSBIT);
                   currentstatus &= ~(1<<COUNTBIT);
                   currentstatus &= ~(1<<NEWBIT);
+                  
+                  
+                  
+                  
+                  dtostrf(webleistung,10,0,stromstring); // 800us
+                  char mittelwertstring[10];
+                  dtostrf(impulsmittelwert,6,0,mittelwertstring);
+                  
+                  lcd_gotoxy(8,0);
+                  lcd_putc('m');
+                  lcd_putc(':');
+                  lcd_puts(trimwhitespace(mittelwertstring));
+                  
+                  lcd_gotoxy(8,1);
+                  lcd_putc('E');
+                  lcd_putc(':');
+                  lcd_putint(wattstunden/1000);
+                  lcd_putc('.');
+                  lcd_putint3(wattstunden);
+                  lcd_putc('W');
+                  lcd_putc('h');
+                  
+
                   sei();
+                  
+                  
                   
                } // if genuegend Werte
                
@@ -576,140 +630,10 @@ int main (void)
          // end test ohne current
          
        else  if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
-         {
-            inbuffer[0]=0;
-            inbuffer[1]=0;
-            inbuffer[2]=0;
-            in_startdaten=0;
-            out_startdaten = 0xB1;
-            //OSZILO;
-            //   PORTD |=(1<<ECHOPIN);
-            currentstatus++; // ein Wert mehr gemessen
-            messungcounter ++;
-            impulszeitsumme += (impulszeit/ANZAHLWERTE);      // float, Wert aufsummieren
-            
-            if ((currentstatus & 0x0F) == ANZAHLWERTE)      // genuegend Werte
-            {
-              // OSZILO;
-               
-               paketcounter++;
-               
-               lcd_gotoxy(0,0);
-               lcd_putint(paketcounter);
-               cli();
-               
-               currentstatus &= 0xF0; // Bit 0-3 reset
-               
-               // Wert fuer SPI-Uebertragung
-               
-               impulsmittelwert = impulszeitsumme; // float = float
-               
-               // timer1 setzen
-               OCR1A = (uint16_t)(impulsmittelwert+0.5); // float to uint16
-               
-               // summe resetten
-               impulszeitsumme = 0;
-               
-               //               impulsmittelwertl = ((uint32_t)impulsmittelwert & 0xFF);
-               //              impulsmittelwerth = ((uint32_t)impulsmittelwert>>8) & 0xFF;
-               //             impulsmittelwerthh = ((uint32_t)impulsmittelwert>>16) & 0xFF;
-               
-               outbuffer[0] = ((uint32_t)impulsmittelwert & 0xFF);
-               outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF;
-               outbuffer[2] = ((uint32_t)impulsmittelwert>>16) & 0xFF;
-               //out_startdaten = 0x13;
-               
-               sei();
-               
-               // if (paketcounter  >= ANZAHLPAKETE)
-               if (webstatus & (1<<DATALOOP))
-               {
-                  
-                  webstatus &= ~(1<<DATALOOP);
-                  
-                  dtostrf(webleistung,10,0,stromstring); // 800us
-                  
-                  
-                  paketcounter=0;
-                  
-                  /*
-                   uint16_t tempmitte = 0;
-                   for (i=0;i<4;i++)
-                   {
-                   tempmitte+= stromimpulsmittelwertarray[i];
-                   }
-                   tempmitte/= 4;
-                   */
-                  /*
-                   lcd_gotoxy(14,0);
-                   lcd_putc('m');
-                   lcd_putint12(tempmitte);
-                   */
-                  //         filtercount =0;
-                  
-                  //if (TEST)
-                  {
-                     //lcd_gotoxy(0,0);
-                     //lcd_putint(messungcounter);
-                     //lcd_putc(' ');
-                     //OSZILO;
-                     
-                     /*
-                      lcd_gotoxy(9,2);
-                      lcd_putint(wattstunden/1000);
-                      lcd_putc('.');
-                      lcd_putint3(wattstunden);
-                      //lcd_putc('W');
-                      //lcd_putc('h');
-                      */
-                     //OSZIHI;
-                  }
-                  
-                  
-                  // senden aktivieren
-                  webstatus |= (1<<DATASEND);
-                  webstatus |= (1<<DATAOK);
-                  // Messung anhalten
-                  webstatus |= (1<<CURRENTSTOP);
-                  // Warten aktivieren
-                  webstatus |= (1<<CURRENTWAIT);
-                  
-                  paketcounter=0;
-                  //sendWebCount++;
-                  //           lcd_gotoxy(6,1);
-                  //           lcd_putc('>');
-               } // if DATALOOP
-               
-               //anzeigewert = 0xFF/0x8000*leistung; // 0x8000/0x255 = 0x81
-               //anzeigewert = leistung/0x81;
-               
-               //               cli();
-               anzeigewert = leistung /0x18; // /24
-               sei();
-               
-               // if (TEST)
-               {
-                  //   lcd_gotoxy(9,0);
-                  //   lcd_putint(anzeigewert);
-               }
-               
-               //               webstatus |= (1<<CURRENTSEND);
-               currentstatus &= ~(1<<NEWBIT);
-              // OSZIHI;
-               
-            } // genuegend Werte
-            else
-            {
-               //lcd_gotoxy(8,1);
-               //lcd_puts("    \0");
-               
-            }
-            
-            //PORTD &= ~(1<<ECHOPIN);
-            impulszeit=0;
-            currentstatus &= ~(1<<IMPULSBIT);
-            //            OSZIHI;
-         }
+       {
+          
+       }
+          //
          
          testwert++;
       } // if (currentstatus & (1<<NEWBIT))
@@ -750,11 +674,12 @@ int main (void)
             messungcounter=0;
             // outbuffer belassen
             
+            /*
             lcd_gotoxy(15,3);
             lcd_puts("   ");
             lcd_gotoxy(5,0);
             lcd_puts("   ");
-            
+            */
             
             SPI_CONTROL_PORT |= (1<<SPI_CONTROL_MISO); // MISO ist HI in Pausen
             
@@ -769,7 +694,7 @@ int main (void)
             
             // in lcd verschoben
             //lcd_clr_line(2);
-            lcd_gotoxy(0,1);
+            
             
             // outbuffer[0]=0;
             // outbuffer[1]=0;
@@ -779,41 +704,52 @@ int main (void)
             // outbuffer[0] = testwert;
             // outbuffer[1] = testwert;
             // outbuffer[2] = testwert;
+            
+            
              testwert++;
-            
-            
-            lcd_puts("oM \0");
-            lcd_putint(outbuffer[0]);
-            lcd_putc('*');
-            lcd_putint(outbuffer[1]);
-            lcd_putc('*');
-            lcd_putint(outbuffer[2]);
-            lcd_putc('*');
-            lcd_putint(out_startdaten);
-            
-            lcd_gotoxy(15,0);
-            lcd_putc('c');
-            lcd_putint(SPI_Call_count0);
-            
-            lcd_gotoxy(0,2);
-            lcd_puts("iM \0");
-            lcd_putint(inbuffer[0]);
-            lcd_putc('*');
-            lcd_putint(inbuffer[1]);
-            lcd_putc('*');
-            lcd_putint(inbuffer[2]);
-            lcd_putc('s');
-            lcd_putint(in_startdaten);
+            if (TEST)
+            {
+               lcd_gotoxy(0,2);
+               lcd_puts("oM \0");
+               lcd_putint(outbuffer[0]);
+               lcd_putc('*');
+               lcd_putint(outbuffer[1]);
+               lcd_putc('*');
+               lcd_putint(outbuffer[2]);
+               lcd_putc('*');
+               lcd_putint(out_startdaten);
+               
+               //            lcd_gotoxy(15,0);
+               //            lcd_putc('c');
+               //            lcd_putint(SPI_Call_count0);
+               
+               lcd_gotoxy(0,3);
+               lcd_puts("iM \0");
+               /*
+                lcd_putint(inbuffer[0]);
+                lcd_putc('*');
+                lcd_putint(inbuffer[1]);
+                lcd_putc('*');
+                lcd_putint(inbuffer[2]);
+                */
+               lcd_putc('i');
+               lcd_putint(in_startdaten);
+               
+               
+            }
             
             if (in_startdaten == 0)
             {
                spi_errcount++;
             }
-            lcd_gotoxy(10,0);
+            //lcd_gotoxy(10,1);
+            lcd_putc('e');
             lcd_putint(spi_errcount);
-            
-            lcd_gotoxy(16,3);
-            lcd_putint(SendErrCounter);
+            lcd_putc('c');
+            lcd_putint(SPI_Call_count0);
+
+            //lcd_gotoxy(16,1);
+            //lcd_putint(SendErrCounter);
             
             /*
              lcd_puthex(in_startdaten);
@@ -823,7 +759,7 @@ int main (void)
              lcd_putc(' ');
              */
             uint8_t j=0;
-            for (j=0;j<3;j++)
+           // for (j=0;j<3;j++)
             {
                //lcd_putc(' ');
                //lcd_puthex(outbuffer[j]);
@@ -1023,6 +959,7 @@ int main (void)
                // impulsmittelwert uebernehmen
                impulsmittelwert = impulszeitsumme;
                
+               
                // summe resetten
                impulszeitsumme = 0;
                
@@ -1062,7 +999,7 @@ int main (void)
             in_startdaten=0;
             in_enddaten=0;
             
-            timer1_set(0);
+  //          timer1_set(0);
             
             spistatus |=(1<<ACTIVE_BIT); // Bit 0 setzen: neue Datenserie
             spistatus |=(1<<STARTDATEN_BIT); // Bit 1 setzen: erster Wert ergibt StartDaten
