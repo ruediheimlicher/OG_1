@@ -40,7 +40,9 @@ volatile uint16_t messungcounter;
 #include "lcd.h"
 
 // Endwert fuer Compare-Match von Timer2
-#define TIMER2_ENDWERT					 125; // 10 us
+//#define TIMER2_ENDWERT					 125; // 10 us
+
+#define TIMER2_ENDWERT					 196; // 10 us
 
 #define IMPULSBIT                   4 // gesetzt wenn Interrupt0 eintrifft. Nach Auswertung im Hauptprogramm wieder zurueckgesetzt
 #define NEWBIT                      5  // Gesetzt wenn SPI-Uebertragung fertig. reset wenn anzahlwerte erreicht.
@@ -145,7 +147,7 @@ void timer2(void) // Takt fuer Strommessung
 
    //TCCR2B |= (1<<CS22); // 
    //TCCR2B |= (1<<CS21); //
-	TCCR2B |= (1<<CS20);
+	TCCR2B |= (1<<CS20); // kein Teiler
    
 	TIFR2 |= (1<<TOV2);							//Clear TOV0 Timer/Counter Overflow Flag. clear pending interrupts
 	
@@ -161,7 +163,7 @@ void timer2(void) // Takt fuer Strommessung
 ISR(TIMER2_COMPA_vect) // CTC Timer2
 {
    
-//   OSZITOGG;
+   OSZITOGG;
    currentcount++; // Zaehlimpuls
    //PORTB ^= (1<<0);
    
