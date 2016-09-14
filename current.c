@@ -127,11 +127,14 @@ void timer2(void) // Takt fuer Strommessung
    TCCR2A=0;
    //PRR&=~(1<<PRTIM2); // write power reduction register to zero
   
+   // ***: Setting gemaess  https://withinspecifications.30ohm.com/2014/02/20/Fast-PWM-on-AtMega328/
    TIMSK2 |= (1<<OCIE2A);                 // CTC Interrupt Enable
 
    TCCR2A |= (1<<WGM21);                  // Toggle OC2A
-    
+   TCCR2A |= (1<<WGM20);                  // ***
+   
    TCCR2A |= (1<<COM2A1);                  // CTC
+   TCCR2A |= (1<<COM2B1);                  // ***
    
    /*
     CS22	CS21	CS20	Description
@@ -147,9 +150,13 @@ void timer2(void) // Takt fuer Strommessung
 
    //TCCR2B |= (1<<CS22); // 
    //TCCR2B |= (1<<CS21); //
-	TCCR2B |= (1<<CS20); // kein Teiler
    
-	TIFR2 |= (1<<TOV2);							//Clear TOV0 Timer/Counter Overflow Flag. clear pending interrupts
+   
+	TCCR2B |= (1<<CS20);    // kein Teiler
+   TCCR2B |= (1<<WGM22);   // ***
+	
+   
+   TIFR2 |= (1<<TOV2);							//Clear TOV0 Timer/Counter Overflow Flag. clear pending interrupts
 	
    //TIMSK2 |= (1<<TOIE2);						//Overflow Interrupt aktivieren
    TCNT2 = 0;                             //Rücksetzen des Timers

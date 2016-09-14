@@ -27,7 +27,7 @@
 //									*
 //***********************************
 
-#define TEST 1
+
 
 #define STARTDELAYBIT	0
 #define HICOUNTBIT		1
@@ -508,7 +508,7 @@ int main (void)
          //     inbuffer[1]=0;
          //     inbuffer[2]=0;
          // test ohne current
-         if (TEST)
+         //if (TEST)
          {
             //           inbuffer[0]=0;
             //           inbuffer[1]=0;
@@ -582,9 +582,9 @@ int main (void)
                   messungcounter=0; //
 
                   // Daten fuer SPI setzen
-                  outbuffer[0] = ((uint32_t)impulsmittelwert & 0xFF);
-                  outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF;
-                  outbuffer[2] = ((uint32_t)impulsmittelwert>>16) & 0xFF;
+                  outbuffer[0] = ((uint32_t)impulsmittelwert & 0xFF); // L
+                  outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF; // H
+                  outbuffer[2] = ((uint32_t)impulsmittelwert>>16) & 0xFF; // HH
                   
                   // Messung vollstaendig, currentstatus zuruecksetzen
                   currentstatus &= ~(1<<IMPULSBIT);
@@ -628,13 +628,13 @@ int main (void)
          }
          
          // end test ohne current
-         
+    /*
        else  if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
        {
           
        }
           //
-         
+     */
          testwert++;
       } // if (currentstatus & (1<<NEWBIT))
       
