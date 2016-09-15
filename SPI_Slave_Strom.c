@@ -467,7 +467,7 @@ int main (void)
    {
       //Blinkanzeige
       loopcount0++;
-      if (loopcount0==0x0800)
+      if (loopcount0==0x0F00)
       {
          loopcount0=0;
          LOOPLEDPORT ^=(1<<LOOPLED);
@@ -476,7 +476,7 @@ int main (void)
          if ((loopcount1 & 0x0F)==0)
          {
             uint8_t t=sekunde & 0x0FF;
-            // lcd_gotoxy(16,0);
+            //lcd_gotoxy(16,0);
             //lcd_putint(t);
             
             sekunde++;
@@ -551,23 +551,38 @@ int main (void)
                   //impulsmittelwert = rand();
                   
                   // impulsmittelwert uebernehmen
+                  //impulsmittelwert = 12*impulszeitsumme/8;
                   impulsmittelwert = impulszeitsumme;
                   
                   // Leistung berechnen
                   
                    if (impulsmittelwert)
                    {
-                      leistung = 360.0/impulsmittelwert*100000.0;// 480us
+                      leistung =(uint32_t) 360.0/impulsmittelwert*10000.0;// 480us
                       
                       // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
-                      webleistung = (uint32_t)360.0/impulsmittelwert*100000.0;
+                      webleistung = (uint32_t)360.0/impulsmittelwert*10000.0;
                       
                       lcd_gotoxy(0,1);
                       lcd_putc('L');
                       lcd_putc(':');
+                     // lcd_putint16(leistung);
+                      //lcd_putc(' ');
+                      //lcd_putint12(webleistung);
+                      //lcd_putc('W');
                       
-                      lcd_putint12(webleistung);
+                      //void lcd_put_frac(char* string, uint8_t start, uint8_t komma, uint8_t frac)
+                      dtostrf(webleistung,10,0,stromstring); // 800us
+                      
+                     // lcd_putc('*');
+                     char*  defstromstring = (char*)trimwhitespace(stromstring);
+                      uint8_t l=strlen(defstromstring);
+                      lcd_gotoxy(2,1);
+                      lcd_puts("    ");
+                      lcd_gotoxy(6-l,1);
+                      lcd_puts(trimwhitespace(defstromstring));
                       lcd_putc('W');
+
                    }
                    wattstunden = impulscount/10; // 310us
 
@@ -594,14 +609,15 @@ int main (void)
                   
                   
                   
-                  dtostrf(webleistung,10,0,stromstring); // 800us
-                  char mittelwertstring[10];
-                  dtostrf(impulsmittelwert,6,0,mittelwertstring);
                   
-                  lcd_gotoxy(8,0);
+                  char mittelwertstring[10];
+                  dtostrf(impulsmittelwert,8,0,mittelwertstring);
+                  
+                  lcd_gotoxy(6,0);
                   lcd_putc('m');
                   lcd_putc(':');
                   lcd_puts(trimwhitespace(mittelwertstring));
+                  
                   
                   lcd_gotoxy(8,1);
                   lcd_putc('E');

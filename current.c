@@ -40,9 +40,12 @@ volatile uint16_t messungcounter;
 #include "lcd.h"
 
 // Endwert fuer Compare-Match von Timer2
-//#define TIMER2_ENDWERT					 125; // 10 us
+#define TIMER2_ENDWERT					 136; // 10 us
 
-#define TIMER2_ENDWERT					 196; // 10 us
+//#define TIMER2_ENDWERT  250
+
+
+//#define TIMER2_ENDWERT					 203; // 10 us
 
 #define IMPULSBIT                   4 // gesetzt wenn Interrupt0 eintrifft. Nach Auswertung im Hauptprogramm wieder zurueckgesetzt
 #define NEWBIT                      5  // Gesetzt wenn SPI-Uebertragung fertig. reset wenn anzahlwerte erreicht.
@@ -130,7 +133,7 @@ void timer2(void) // Takt fuer Strommessung
    // ***: Setting gemaess  https://withinspecifications.30ohm.com/2014/02/20/Fast-PWM-on-AtMega328/
    TIMSK2 |= (1<<OCIE2A);                 // CTC Interrupt Enable
 
-   TCCR2A |= (1<<WGM21);                  // Toggle OC2A
+   TCCR2A |= (1<<WGM21);                  // set OC2A on bottom, clear on comp match
    TCCR2A |= (1<<WGM20);                  // ***
    
    TCCR2A |= (1<<COM2A1);                  // CTC
@@ -152,7 +155,7 @@ void timer2(void) // Takt fuer Strommessung
    //TCCR2B |= (1<<CS21); //
    
    
-	TCCR2B |= (1<<CS20);    // kein Teiler
+	TCCR2B |= (1<<CS21);    // kein Teiler
    TCCR2B |= (1<<WGM22);   // ***
 	
    
@@ -161,7 +164,8 @@ void timer2(void) // Takt fuer Strommessung
    //TIMSK2 |= (1<<TOIE2);						//Overflow Interrupt aktivieren
    TCNT2 = 0;                             //Rücksetzen des Timers
 	//OSZILO;
-   OCR2A = TIMER2_ENDWERT;    
+   OCR2A = TIMER2_ENDWERT;   // Frequenz
+   OCR2B = 20; // Pulsweite
 }
 
 
@@ -170,7 +174,7 @@ void timer2(void) // Takt fuer Strommessung
 ISR(TIMER2_COMPA_vect) // CTC Timer2
 {
    
-   OSZITOGG;
+   OSZILO;
    currentcount++; // Zaehlimpuls
    //PORTB ^= (1<<0);
    
@@ -192,6 +196,7 @@ ISR(TIMER2_COMPA_vect) // CTC Timer2
          webstatus |= (1<<DATALOOP);
       }
    }
+   OSZIHI;
 }
 
 // ISR fuer Atmega328
