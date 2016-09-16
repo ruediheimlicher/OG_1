@@ -40,7 +40,8 @@ volatile uint16_t messungcounter;
 #include "lcd.h"
 
 // Endwert fuer Compare-Match von Timer2
-#define TIMER2_ENDWERT					 136; // 10 us
+#define TIMER2_ENDWERT12					 136; // 10 us
+#define TIMER2_ENDWERT8					 200; // 10 us
 
 //#define TIMER2_ENDWERT  250
 
@@ -154,8 +155,14 @@ void timer2(void) // Takt fuer Strommessung
    //TCCR2B |= (1<<CS22); // 
    //TCCR2B |= (1<<CS21); //
    
-   
-	TCCR2B |= (1<<CS21);    // kein Teiler
+   if(F_CPU == 8000000)
+   {
+      TCCR2B |= (1<<CS20);    // kein Teiler
+   }
+   else
+   {
+      TCCR2B |= (1<<CS21);    // Teiler 8
+   }
    TCCR2B |= (1<<WGM22);   // ***
 	
    
@@ -164,8 +171,17 @@ void timer2(void) // Takt fuer Strommessung
    //TIMSK2 |= (1<<TOIE2);						//Overflow Interrupt aktivieren
    TCNT2 = 0;                             //Rücksetzen des Timers
 	//OSZILO;
-   OCR2A = TIMER2_ENDWERT;   // Frequenz
-   OCR2B = 20; // Pulsweite
+   
+   if(F_CPU == 8000000) // 40 kHz
+   {
+      OCR2A = TIMER2_ENDWERT8;   // Frequenz
+   }
+   else
+   {
+      OCR2A = TIMER2_ENDWERT12;   // Frequenz
+   }
+   
+   OCR2B = 5; // Pulsweite
 }
 
 
@@ -176,6 +192,7 @@ ISR(TIMER2_COMPA_vect) // CTC Timer2
    
    OSZILO;
    currentcount++; // Zaehlimpuls
+   
    //PORTB ^= (1<<0);
    
    // Zeitfenster fuer Impulszaehlung bei hohen Frequenzen 100 ms

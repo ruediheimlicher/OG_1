@@ -103,7 +103,7 @@ uint8_t lastcounter=0;
 volatile uint8_t  anzeigewert =0;
 
 static char stromstring[10];
-static char CurrentDataString[64];
+//static char CurrentDataString[64];
 
 // defines fuer BUS-Status
 #define SPI_SHIFT_IN_OK_BIT	6
@@ -467,7 +467,7 @@ int main (void)
    {
       //Blinkanzeige
       loopcount0++;
-      if (loopcount0==0x0F00)
+      if (loopcount0==0x8F00)
       {
          loopcount0=0;
          LOOPLEDPORT ^=(1<<LOOPLED);
@@ -558,6 +558,11 @@ int main (void)
                   
                    if (impulsmittelwert)
                    {
+                      if (F_CPU==8000000)
+                      {
+                        // impulsmittelwert*= 3;
+                         impulsmittelwert/= 4;
+                      }
                       leistung =(uint32_t) 360.0/impulsmittelwert*10000.0;// 480us
                       
                       // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
@@ -575,6 +580,7 @@ int main (void)
                       dtostrf(webleistung,10,0,stromstring); // 800us
                       
                      // lcd_putc('*');
+                      
                      char*  defstromstring = (char*)trimwhitespace(stromstring);
                       uint8_t l=strlen(defstromstring);
                       lcd_gotoxy(2,1);
@@ -582,7 +588,7 @@ int main (void)
                       lcd_gotoxy(6-l,1);
                       lcd_puts(trimwhitespace(defstromstring));
                       lcd_putc('W');
-
+                      
                    }
                    wattstunden = impulscount/10; // 310us
 
@@ -612,7 +618,8 @@ int main (void)
                   
                   char mittelwertstring[10];
                   dtostrf(impulsmittelwert,8,0,mittelwertstring);
-                  
+                  lcd_gotoxy(8,0);
+                  lcd_puts("     ");
                   lcd_gotoxy(6,0);
                   lcd_putc('m');
                   lcd_putc(':');
