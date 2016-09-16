@@ -244,20 +244,21 @@ void timer1(void) // Instrument
 //   TCCR1B |= (1<<CS12);
    TCR1A_SET;
    
-   ICR1 = 0xFFFF;
-   OCR1A = 0x00;
+   ICR1 = 0xF000;
+   OCR1A = 0x01;
    
    DDRB |= (1<<1);
  //  TIMSK1 |= OCIE1A;
 }
 
-/*
+
 ISR(TIMER1_COMPA_vect)
 {
    //OCR1A = 0xFFFF - (uint16_t)(impulsmittelwert+0.5); // float to uint16
-  // OCR1A = 4*webleistung;
+   OCR1A = webleistung;
+   //OCR1A = 0xAFFF;
 }
-*/
+
 
 void timer1_set(int on)
 {
