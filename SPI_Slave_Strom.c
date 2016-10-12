@@ -17,6 +17,7 @@
 #include <inttypes.h>
 #include <avr/wdt.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "lcd.c"
 #include "current.c"
@@ -388,83 +389,81 @@ unsigned long gleitmittelwert(unsigned long newval,int faktor)
    }
 }
 
-
 volatile uint8_t testwert=0;
-
-
 
 int main (void)
 {
-	/* 
-	in Start-loop in while
-	init_twi_slave (SLAVE_ADRESSE);
-	sei();
-	*/
-	
-	wdt_disable();
-	MCUSR &= ~(1<<WDRF);
-	//WDTCR |= (1<<WDCE) | (1<<WDE);
-	WDTCSR = 0x00;
-
-	SPI_slaveinit(); // SPI mit TWI_Slave WS
-	//PORT2 |=(1<<PC4);
-	//PORTC |=(1<<PC5);
-		
-	/* initialize the LCD */
-	lcd_initialize(LCD_FUNCTION_8x2, LCD_CMD_ENTRY_INC, LCD_CMD_ON);
-
-	lcd_puts("Guten Tag\0");
-	delay_ms(1000);
-	lcd_cls();
-	
-	
-	delay_ms(1000);
+   /*
+    in Start-loop in while
+    init_twi_slave (SLAVE_ADRESSE);
+    sei();
+    */
+   
+   wdt_disable();
+   MCUSR &= ~(1<<WDRF);
+   //WDTCR |= (1<<WDCE) | (1<<WDE);
+   WDTCSR = 0x00;
+   
+   SPI_slaveinit(); // SPI mit TWI_Slave WS
+   //PORT2 |=(1<<PC4);
+   //PORTC |=(1<<PC5);
+   
+   /* initialize the LCD */
+   lcd_initialize(LCD_FUNCTION_8x2, LCD_CMD_ENTRY_INC, LCD_CMD_ON);
+   
+   lcd_puts("Guten Tag\0");
+   delay_ms(1000);
+   lcd_cls();
+   
+   
+   delay_ms(1000);
    
    lcd_clr_line(0);
    lcd_puts("Strom");
-	uint8_t Tastenwert=0;
-	uint8_t TastaturCount=0;
-	uint8_t Servowert=0;
-	uint8_t Servorichtung=1;
-	
-	uint16_t TastenStatus=0;
-	uint16_t Tastencount=0;
-	uint16_t Tastenprellen=0x01F;
-	uint8_t Schalterposition=0;
-	//timer0();
-	
-	//initADC(TASTATURPIN);
-	//wdt_enable(WDTO_2S);
-	
+   uint8_t Tastenwert=0;
+   uint8_t TastaturCount=0;
+   /*
+    uint8_t Servowert=0;
+    uint8_t Servorichtung=1;
+    
+    uint16_t TastenStatus=0;
+    uint16_t Tastencount=0;
+    uint16_t Tastenprellen=0x01F;
+    uint8_t Schalterposition=0;
+    */
+   //timer0();
+   
+   //initADC(TASTATURPIN);
+   //wdt_enable(WDTO_2S);
+   
    uint16_t loopcount0=0;
-	uint16_t loopcount1=0;
+   uint16_t loopcount1=0;
    uint16_t sekunde=0;
-	uint16_t startdelay0=0x01FF;
-	//uint16_t startdelay1=0;
-
+   uint16_t startdelay0=0x01FF;
+   //uint16_t startdelay1=0;
+   
    uint8_t SPI_Call_count0=0;
-
-	//uint8_t twierrcount=0;
-	LOOPLEDDDR |=(1<<LOOPLED);
-	
-	delay_ms(800);
-	//eeprom_write_byte(&WDT_ErrCount0,0);
-	uint8_t eepromWDT_Count0=eeprom_read_byte(&WDT_ErrCount0);
-//	uint8_t eepromWDT_Count1=eeprom_read_byte(&WDT_ErrCount1);
-	uint16_t twi_HI_count0=0;
-
+   
+   //uint8_t twierrcount=0;
+   LOOPLEDDDR |=(1<<LOOPLED);
+   
+   delay_ms(800);
+   //eeprom_write_byte(&WDT_ErrCount0,0);
+   //	uint8_t eepromWDT_Count0=eeprom_read_byte(&WDT_ErrCount0);
+   //	uint8_t eepromWDT_Count1=eeprom_read_byte(&WDT_ErrCount1);
+   
    timer1();
    timer2();
    InitCurrent();
    InitSPI_Slave();
-		/*
-	Bit 0: 1 wenn wdt ausgelšst wurde
-	 
-	  */
+   /*
+    Bit 0: 1 wenn wdt ausgelšst wurde
+    
+    */
    sei();
    uint8_t i=0;
    
-	while (1)
+   while (1)
    {
       //Blinkanzeige
       loopcount0++;
@@ -557,42 +556,42 @@ int main (void)
                   
                   // Leistung berechnen
                   
-                   if (impulsmittelwert)
-                   {
-                      if (F_CPU==8000000)
-                      {
+                  if (impulsmittelwert)
+                  {
+                     if (F_CPU==8000000)
+                     {
                         // impulsmittelwert*= 3;
-                         impulsmittelwert/= 4;
-                      }
-                      leistung =(uint32_t) 360.0/impulsmittelwert*10000.0;// 480us
-                      
-                      // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
-                      webleistung = (uint32_t)360.0/impulsmittelwert*10000.0;
-                      
-                      lcd_gotoxy(0,1);
-                      lcd_putc('L');
-                      lcd_putc(':');
+                        impulsmittelwert/= 4;
+                     }
+                     leistung =(uint32_t) 360.0/impulsmittelwert*10000.0;// 480us
+                     
+                     // webleistung = (uint32_t)360.0/impulsmittelwert*1000000.0;
+                     webleistung = (uint32_t)360.0/impulsmittelwert*10000.0;
+                     
+                     lcd_gotoxy(0,1);
+                     lcd_putc('L');
+                     lcd_putc(':');
                      // lcd_putint16(leistung);
-                      //lcd_putc(' ');
-                      //lcd_putint12(webleistung);
-                      //lcd_putc('W');
-                      
-                      //void lcd_put_frac(char* string, uint8_t start, uint8_t komma, uint8_t frac)
-                      dtostrf(webleistung,10,0,stromstring); // 800us
-                      
+                     //lcd_putc(' ');
+                     //lcd_putint12(webleistung);
+                     //lcd_putc('W');
+                     
+                     //void lcd_put_frac(char* string, uint8_t start, uint8_t komma, uint8_t frac)
+                     dtostrf(webleistung,10,0,stromstring); // 800us
+                     
                      // lcd_putc('*');
-                      
+                     
                      char*  defstromstring = (char*)trimwhitespace(stromstring);
-                      uint8_t l=strlen(defstromstring);
-                      lcd_gotoxy(2,1);
-                      lcd_puts("    ");
-                      lcd_gotoxy(6-l,1);
-                      lcd_puts(trimwhitespace(defstromstring));
-                      lcd_putc('W');
-                      
-                   }
-                   wattstunden = impulscount/10; // 310us
-
+                     uint8_t l=strlen(defstromstring);
+                     lcd_gotoxy(2,1);
+                     lcd_puts("    ");
+                     lcd_gotoxy(6-l,1);
+                     lcd_puts(trimwhitespace(defstromstring));
+                     lcd_putc('W');
+                     
+                  }
+                  wattstunden = impulscount/10; // 310us
+                  
                   
                   // timer1 setzen
                   
@@ -602,7 +601,7 @@ int main (void)
                   impulszeitsumme = 0;
                   
                   messungcounter=0; //
-
+                  
                   // Daten fuer SPI setzen
                   outbuffer[0] = ((uint32_t)impulsmittelwert & 0xFF); // L
                   outbuffer[1] = ((uint32_t)impulsmittelwert>>8) & 0xFF; // H
@@ -636,15 +635,15 @@ int main (void)
                   lcd_putc('W');
                   lcd_putc('h');
                   
-
+                  
                   sei();
                   
                   
                   
                } // if genuegend Werte
                
-      //         impulszeit=0;
- //              currentstatus &= ~(1<<IMPULSBIT);
+               //         impulszeit=0;
+               //              currentstatus &= ~(1<<IMPULSBIT);
                //OSZIHI;
             }// if IMPULSBIT
             
@@ -652,13 +651,13 @@ int main (void)
          }
          
          // end test ohne current
-    /*
-       else  if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
-       {
+         /*
+          else  if (currentstatus & (1<<IMPULSBIT)) // neuer Impuls angekommen, Zaehlung lauft
+          {
           
-       }
+          }
           //
-     */
+          */
          testwert++;
       } // if (currentstatus & (1<<NEWBIT))
       
@@ -699,11 +698,11 @@ int main (void)
             // outbuffer belassen
             
             /*
-            lcd_gotoxy(15,3);
-            lcd_puts("   ");
-            lcd_gotoxy(5,0);
-            lcd_puts("   ");
-            */
+             lcd_gotoxy(15,3);
+             lcd_puts("   ");
+             lcd_gotoxy(5,0);
+             lcd_puts("   ");
+             */
             
             SPI_CONTROL_PORT |= (1<<SPI_CONTROL_MISO); // MISO ist HI in Pausen
             
@@ -730,7 +729,7 @@ int main (void)
             // outbuffer[2] = testwert;
             
             
-             testwert++;
+            testwert++;
             if (TEST)
             {
                lcd_gotoxy(0,2);
@@ -771,7 +770,7 @@ int main (void)
             lcd_putint(spi_errcount);
             lcd_putc('c');
             lcd_putint(SPI_Call_count0);
-
+            
             //lcd_gotoxy(16,1);
             //lcd_putint(SendErrCounter);
             
@@ -783,7 +782,7 @@ int main (void)
              lcd_putc(' ');
              */
             uint8_t j=0;
-           // for (j=0;j<3;j++)
+            // for (j=0;j<3;j++)
             {
                //lcd_putc(' ');
                //lcd_puthex(outbuffer[j]);
@@ -805,11 +804,14 @@ int main (void)
             lcd_gotoxy(19,0);
             if (ByteCounter == SPI_BUFSIZE-1) // Uebertragung war vollstaendig
             {
-               
+               lcd_gotoxy(15,3);
+               lcd_puts("   ");
+
                if (out_startdaten + in_enddaten==0xFF)
                {
                   lcd_putc('+');
                   spistatus |= (1<<SUCCESS_BIT); // Bit fuer vollstaendige und korrekte  Uebertragung setzen
+                  
                   //lcd_gotoxy(19,0);
                   //lcd_putc(' ');
                   //lcd_clr_line(3);
@@ -855,7 +857,6 @@ int main (void)
                spistatus &= ~(1<<SUCCESS_BIT); //  Uebertragung unvollstaendig, Bit loeschen
                //lcd_clr_line(0);
                lcd_gotoxy(15,3);
-               
                lcd_puts("ER2\0");
                /*
                 lcd_putc(' ');
@@ -998,9 +999,9 @@ int main (void)
                currentstatus &= ~(1<<IMPULSBIT);
                currentstatus &= ~(1<<COUNTBIT);
                currentstatus &= ~(1<<NEWBIT);
-
+               
             }
-
+            
             /*
              // in Master:
              // Aufnahme der Daten vom HomeCentral-Slave vorbereiten
@@ -1023,7 +1024,7 @@ int main (void)
             in_startdaten=0;
             in_enddaten=0;
             
-  //          timer1_set(0);
+            //          timer1_set(0);
             
             spistatus |=(1<<ACTIVE_BIT); // Bit 0 setzen: neue Datenserie
             spistatus |=(1<<STARTDATEN_BIT); // Bit 1 setzen: erster Wert ergibt StartDaten
@@ -1232,7 +1233,7 @@ int main (void)
       
       //	LOOPLEDPORT &= ~(1<<LOOPLED);
    }//while
-
-
-// return 0;
+   
+   
+   // return 0;
 }
