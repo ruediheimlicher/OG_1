@@ -801,14 +801,16 @@ int main (void)
             
             lcd_gotoxy(19,0);
             lcd_putc(' ');
-            lcd_gotoxy(19,0);
             if (ByteCounter == SPI_BUFSIZE-1) // Uebertragung war vollstaendig
             {
-               lcd_gotoxy(15,3);
-               lcd_puts("   ");
+ //              lcd_gotoxy(15,3);
+ //              lcd_puts("   ");
 
                if (out_startdaten + in_enddaten==0xFF)
                {
+                  
+                  lcd_gotoxy(15,3);
+                  lcd_puts("    ");
                   lcd_putc('+');
                   spistatus |= (1<<SUCCESS_BIT); // Bit fuer vollstaendige und korrekte  Uebertragung setzen
                   
@@ -829,7 +831,9 @@ int main (void)
                else
                {
                   spistatus &= ~(1<<SUCCESS_BIT); // Uebertragung fehlerhaft, Bit loeschen
-                  
+                  lcd_gotoxy(15,3);
+                  lcd_puts("    ");
+                 
                   lcd_putc('-');
                   //lcd_clr_line(1);
                   lcd_gotoxy(0,3);
@@ -1036,6 +1040,9 @@ int main (void)
             // Anzeige, das  rxdata vorhanden ist
             lcd_gotoxy(19,0);
             lcd_putc('$');
+            lcd_gotoxy(19,3);
+            lcd_putc(' ');
+
             //lcd_clr_line(0);
             
             
