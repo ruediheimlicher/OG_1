@@ -624,8 +624,8 @@ int main (void)
                   lcd_putc('m');
                   lcd_putc(':');
                   lcd_puts(trimwhitespace(mittelwertstring));
-                  
-                  
+                  lcd_putc(' ');
+                  lcd_putint12(impulsmittelwert);
                   lcd_gotoxy(8,1);
                   lcd_putc('E');
                   lcd_putc(':');
