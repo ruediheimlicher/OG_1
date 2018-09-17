@@ -251,30 +251,21 @@ void InitSPI_Slave(void)
 
 ISR( INT0_vect ) // Clk fuer SPI-Datenaustausch auf INT0
 {
-   cli();
+//   cli();
    //OSZILO;
    _delay_us(10);
    if (spistatus & (1<<ACTIVE_BIT))									// CS ist LO, Interrupt ist OK
    {
-      
-      
-      if (spistatus & (1<<STARTDATEN_BIT))						// out_startdaten senden, in_startdaten laden
+       if (spistatus & (1<<STARTDATEN_BIT))						// out_startdaten senden, in_startdaten laden
       {
-         
          if (SPI_CONTROL_PORTPIN & (1<<SPI_CONTROL_MOSI))	// bit ist HI
          {
             in_startdaten |= (1<<(7-bitpos));
-            
-            // Echo laden
-            //SPI_CONTROL_PORT |= (1<<SPI_CONTROL_MISO);
          }
          else																// bit ist LO
          {
             in_startdaten |= (0<<(7-bitpos));
-            
-            // Echo laden
-            //SPI_CONTROL_PORT &= ~(1<<SPI_CONTROL_MISO);
-         }
+          }
          
          // Output laden
          if (out_startdaten & (1<<(7-bitpos)))
